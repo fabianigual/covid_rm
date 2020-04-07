@@ -5,7 +5,7 @@ covid <- read_delim("data/covid.csv", ";",
                     escape_double = FALSE, locale = locale(encoding = "ISO-8859-1", 
                                                            asciify = TRUE), trim_ws = TRUE)
 # covid RM ----------------------------------------------------------------
-
+#
 
 # n de casos
 covid <- covid %>% 
