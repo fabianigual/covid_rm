@@ -17,10 +17,10 @@ covid <- covid %>% mutate(n_casos = covid %>% select(tail(names(.),1)) %>% pull(
 comunas <- codigos_territoriales %>% 
   select(codigo_comuna,nombre_comuna) %>% 
   distinct() 
-comunas <- comunas %>% mutate(nombre_comuna = tolower(nombre_comuna))
 
 
-covid <- covid %>% mutate(comuna = tolower(comuna),
+
+covid <- covid %>% mutate(
                           comuna = stri_trans_general(comuna,"Latin-ASCII"))
 
 
@@ -60,7 +60,7 @@ hc <- highchart(type = 'map') %>%
              style = list(fontSize = "15px" )) %>% 
   hc_mapNavigation(enabled = TRUE) %>% 
   hc_title(text = "Región Metropolitana - Covid-19") %>% 
-  hc_subtitle(text = "Casos por comuna al 07-04-2020.",align = "center") %>% 
+  hc_subtitle(text = glue::glue("Casos por comuna al { format(Sys.Date(), '%d- %m-%Y') }" ), align = "center") %>% 
   hc_size(height = 750,width = 900) %>% 
   hc_credits(enabled = TRUE, text = paste("Fuente: INFORME EPIDEMIOLÓGICO. COVID-19, al",Sys.Date()),
                                                 href = "https://www.minsal.cl/wp-content/uploads/2020/04/Reporte_COVID_19_06_04_2020.pdf")
