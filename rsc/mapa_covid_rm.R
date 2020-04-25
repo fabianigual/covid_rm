@@ -53,9 +53,11 @@ mapa_region_met <- jsonlite::fromJSON(mapa_region_met_gjson, simplifyVector = FA
 #Mapa 
 hc <- highchart(type = 'map') %>% 
   hc_add_series_map(mapa_region_met, mapa_rm, value = "n_casos", joinBy = c("codigo_comuna"),
-                    showInLegend = TRUE, name = "comuna") %>%  
+                    showInLegend = TRUE, name = "comuna",
+                    dataLabels = list(enabled = TRUE,
+                                      format = '{point.properties.nombre_comuna}')) %>%  
   # hc_colorAxis(stops = color_stops()) %>% 
-  hc_tooltip(useHTML = TRUE, headerFormat = "{point.name}",
+  hc_tooltip(useHTML = TRUE, headerFormat = "{point.properties.nombre_comuna}",
              pointFormat = "<b>{point.comuna}</b><br> Cantidad de casos: <b> {point.n_casos} </b><br>",
              style = list(fontSize = "15px" )) %>% 
   hc_mapNavigation(enabled = TRUE) %>% 
@@ -65,7 +67,7 @@ hc <- highchart(type = 'map') %>%
   hc_credits(enabled = TRUE, text = paste("Fuente: INFORME EPIDEMIOLÓGICO. COVID-19, al",Sys.Date()),
                                                 href = "https://www.minsal.cl/wp-content/uploads/2020/04/Reporte_COVID_19_06_04_2020.pdf")
 
-
+hc
 # save --------------------------------------------------------------------
 
 saveWidget(hc, file="index.html")
