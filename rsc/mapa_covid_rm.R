@@ -82,7 +82,7 @@ hc <- highchart(type = 'map') %>%
              style = list(fontSize = "15px" )) %>% 
   hc_mapNavigation(enabled = TRUE) %>% 
  
-  hc_title(text = "Región Metropolitana - Covid-19") %>% 
+  hc_title(text = "Región Metropolitana: Casos Covid-19") %>% 
   hc_subtitle(text = glue::glue("Casos por comuna al { last_date }" ), align = "center") %>% 
   hc_size(height = 750,width = 900) %>% 
   hc_credits(enabled = TRUE, text = paste("Fuente: INFORME EPIDEMIOLÓGICO. COVID-19, al",last_date),
