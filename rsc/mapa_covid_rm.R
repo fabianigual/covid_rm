@@ -1,16 +1,24 @@
 # setup -------------------------------------------------------------------
+if (!require("pacman")) install.packages("pacman")
 pacman::p_load(readxl, tidyverse, janitor, htmlwidgets, sjlabelled, expss, haven, chilemapas, highcharter, lubridate, geojsonsf, jsonlite, spdplyr,
               tm,stringi)
+url1 <- "https://raw.githubusercontent.com/jorgeperezrojas/covid19-data/master/csv/confirmados_comunas.csv" #Datos jorge perez
+url2 <- "https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto1/Covid-19.csv" #Datos minciencia
+url3 <- "https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto6/bulk/data.csv" #Tasa de incidencia
+covid <- read.csv(url2) %>% clean_names()
+tasa_incidencia <- read_csv(url3) %>% clean_names()
+# covid --------------------------------------------------------------------
 
-covid <- read_csv("https://raw.githubusercontent.com/jorgeperezrojas/covid19-data/master/csv/confirmados_comunas.csv")
-# covid RM ----------------------------------------------------------------
-#
+last_date <- gsub("x","",names(covid)[length(covid)-1])
+last_date <- gsub("_","-",last_date)
 
-covid <- covid %>% mutate_all(funs(gsub("-",0,.))) 
-covid <- covid %>% mutate(n_casos = covid %>% select(tail(names(.),1)) %>% pull()) %>% 
+# covid <- covid %>% mutate_all(funs(gsub("-",0,.))) 
+
+covid <- covid %>% mutate(n_casos = covid %>% select(names(.)[length(names(covid))-1]) %>% pull()) %>% 
   filter(codigo_region==13) %>% 
-  select(region,comuna,n_casos) %>% 
+  select(region,comuna,n_casos,tasa) %>% 
   mutate(n_casos = as_numeric(n_casos))
+
 
 # comuna
 
@@ -27,10 +35,19 @@ covid <- covid %>% mutate(
 covid <- covid %>% left_join(comunas, by = c("comuna"="nombre_comuna"))
 
 
+# tasa de incidencia ------------------------------------------------------
+
+tasa_incidencia <- tasa_incidencia %>% filter(fecha == last_date,
+                           region_id==13) %>% 
+  select(comuna_id,tasa,poblacion) %>% 
+  rename(incidencia = tasa) %>% 
+  mutate(comuna_id = as_character(comuna_id))
+  
+covid <- covid %>% left_join(tasa_incidencia, by = c("codigo_comuna"="comuna_id"))
 # mapa --------------------------------------------------------------------
 
 mapa_rm <- covid %>% 
-  select(comuna,codigo_comuna,n_casos) %>%
+  select(comuna,codigo_comuna,n_casos,incidencia,poblacion) %>%
   filter(codigo_comuna %in% mapa_comunas$codigo_comuna)
 
 
@@ -56,18 +73,23 @@ hc <- highchart(type = 'map') %>%
                     showInLegend = TRUE, name = "comuna",
                     dataLabels = list(enabled = TRUE,
                                       format = '{point.properties.nombre_comuna}')) %>%  
-  # hc_colorAxis(stops = color_stops()) %>% 
+  hc_plotOptions(lang = list(thousandSep = ".")) %>% 
   hc_tooltip(useHTML = TRUE, headerFormat = "{point.properties.nombre_comuna}",
-             pointFormat = "<b>{point.comuna}</b><br> Cantidad de casos: <b> {point.n_casos} </b><br>",
+             pointFormat = "<b><strong>{point.comuna}</b><br> </strong> <br>
+             Cantidad de casos: <b> {point.n_casos} </b><br>
+             Tasa de incidencia: <b> {point.properties.incidencia:.1f}</b><br>
+             Población: <b> {point.properties.poblacion:,.0f}",
              style = list(fontSize = "15px" )) %>% 
   hc_mapNavigation(enabled = TRUE) %>% 
+ 
   hc_title(text = "Región Metropolitana - Covid-19") %>% 
-  hc_subtitle(text = glue::glue("Casos por comuna al { format(Sys.Date(), '%d- %m-%Y') }" ), align = "center") %>% 
+  hc_subtitle(text = glue::glue("Casos por comuna al { last_date }" ), align = "center") %>% 
   hc_size(height = 750,width = 900) %>% 
-  hc_credits(enabled = TRUE, text = paste("Fuente: INFORME EPIDEMIOLÓGICO. COVID-19, al",Sys.Date()),
-                                                href = "https://www.minsal.cl/wp-content/uploads/2020/04/Reporte_COVID_19_06_04_2020.pdf")
+  hc_credits(enabled = TRUE, text = paste("Fuente: INFORME EPIDEMIOLÓGICO. COVID-19, al",last_date),
+                                                href = "https://www.minsal.cl/")
 
 hc
 # save --------------------------------------------------------------------
+
 
 saveWidget(hc, file="index.html")
