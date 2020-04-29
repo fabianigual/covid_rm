@@ -25,13 +25,7 @@ covid <- covid %>% mutate(n_casos = covid %>% select(names(.)[length(names(covid
 comunas <- codigos_territoriales %>% 
   select(codigo_comuna,nombre_comuna) %>% 
   distinct() 
-
-
-
-covid <- covid %>% mutate(
-                          comuna = stri_trans_general(comuna,"Latin-ASCII"))
-
-
+covid <- covid %>% mutate(comuna = stri_trans_general(comuna,"Latin-ASCII"))
 covid <- covid %>% left_join(comunas, by = c("comuna"="nombre_comuna"))
 
 
@@ -49,8 +43,6 @@ covid <- covid %>% left_join(tasa_incidencia, by = c("codigo_comuna"="comuna_id"
 mapa_rm <- covid %>% 
   select(comuna,codigo_comuna,n_casos,incidencia,poblacion) %>%
   filter(codigo_comuna %in% mapa_comunas$codigo_comuna)
-
-
 
 mapa_region_met <- mapa_comunas %>%
   filter(codigo_region=="13") %>% 
