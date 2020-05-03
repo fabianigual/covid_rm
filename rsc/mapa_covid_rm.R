@@ -66,6 +66,7 @@ hc <- highchart(type = 'map') %>%
                     dataLabels = list(enabled = TRUE,
                                       format = '{point.properties.nombre_comuna}')) %>%  
   hc_plotOptions(lang = list(thousandSep = ".")) %>% 
+  hc_xAxis(minRange = 0.1) %>% 
   hc_tooltip(useHTML = TRUE, headerFormat = "{point.properties.nombre_comuna}",
              pointFormat = "<b><strong>{point.comuna}</b><br> </strong> <br>
              Cantidad de casos: <b> {point.n_casos} </b><br>
