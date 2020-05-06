@@ -8,7 +8,7 @@ ui <- fluidPage(
     
 
     # Application title
-    titlePanel("Casos de COVID19 en Chile"),
+    titlePanel("COVID19 en Chile"),
     
     theme = shinythemes::shinytheme('cerulean'),
 
@@ -16,11 +16,13 @@ ui <- fluidPage(
         sidebarPanel(
             selectInput("region",
                         label = "Seleccione región",
-                        choices = levels(covid$region))
+                        choices = levels(covid$region),
+                        textOutput("total_casos"))
         ),
 
         # Show a plot of the generated distribution
-        mainPanel(tabsetPanel(
+        mainPanel(h2("Mapa y tabla de casos a nivel comunal"), 
+                  tabsetPanel(
             tabPanel("Mapa",highchartOutput("mapa", height = "650px")),
             tabPanel("Tabla", DT::DTOutput('table'))     
         )
@@ -45,6 +47,13 @@ server <- function(input, output) {
         }
     }) 
     
+    output$total_casos <- renderText({
+        
+        casos <- covid %>% filter(as_character(codigo_region) == as_character(cod_reg)) %>% 
+            summarise(n_casos_total = sum(n_casos)) 
+        
+        print(paste("El número de casos acumulado en la región es",casos$n_casos_total))
+    })
     
     output$mapa <- renderHighchart({ 
         
@@ -76,8 +85,7 @@ server <- function(input, output) {
                           mutate(codigo_comuna = as_character(codigo_comuna))) %>% 
             mutate(codigo_comuna = gsub("^0","",codigo_comuna)) %>% 
             sf::st_as_sf() %>% 
-            geojsonsf::sf_geojson() 
-        mapa <-   jsonlite::fromJSON(mapa,simplifyVector = FALSE) 
+            geojsonsf::sf_geojson() %>% jsonlite::fromJSON(simplifyVector = FALSE) 
         
         hc <- highchart(type = 'map') %>% 
             hc_add_series_map(mapa, covid2map, value = "n_casos", joinBy = c("codigo_comuna"),
@@ -105,7 +113,6 @@ server <- function(input, output) {
     })
     
     output$table <- DT::renderDT({
-        
         
         covid %>% filter(region == input$region)  %>% 
             select(comuna,poblacion,n_casos,incidencia) %>% 
